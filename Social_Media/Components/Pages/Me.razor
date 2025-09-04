@@ -1,0 +1,119 @@
+﻿@page "/me"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Social_Media.Data
+@using Social_Media.Models
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+@inject ILogger<Me> Logger
+
+@if (_user is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="container profile-page">
+        <header class="profile-header profile-header--me">
+            <img src="@(_user.PhotoUrl ?? "https://picsum.photos/1200/800")"
+                 alt="Profile photo"
+                 class="avatar xl" />
+
+            <div class="meta">
+                <h1 class="display-name">@(_user.DisplayName ?? _user.UserName)</h1>
+            </div>
+
+            <div class="actions">
+                <a class="btn btn-outline" href="/u/@_user.UserName/photo" data-enhance-nav="false">My Photo</a>
+                <a class="btn" href="/edit-profile">Edit profile</a>
+            </div>
+        </header>
+
+        <section class="card profile-details">
+            <dl class="facts">
+                <div><dt>About</dt><dd>@(_user.About ?? "—")</dd></div>
+                <div><dt>Age</dt><dd>@(_user.Age?.ToString() ?? "—")</dd></div>
+                <div><dt>Likes</dt><dd>@(_user.Likes ?? "—")</dd></div>
+                <div><dt>Favorite food</dt><dd>@(_user.FavoriteFood ?? "—")</dd></div>
+            </dl>
+        </section>
+
+        <section class="card mt-3">
+            <h2>Messages</h2>
+            @if (_messages.Count == 0)
+            {
+                <p>No messages yet.</p>
+            }
+            else
+            {
+                <ul class="message-list">
+                    @foreach (var message in _messages)
+                    {
+                        <li class="message">
+                            <p class="body">@message.Body</p>
+                            <p class="meta">
+                                From: <strong>@message.FromUser.DisplayName (@message.FromUser.UserName)</strong>
+                                <span class="text-muted">on @message.CreatedUtc.ToLocalTime()</span>
+                            </p>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    private ApplicationUser? _user;
+    private List<Message> _messages = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("Initializing the Me page.");
+
+        var auth = await Auth.GetAuthenticationStateAsync();
+        var uid = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(uid))
+        {
+            Logger.LogWarning("User ID is null or empty. Redirecting to home page.");
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        try
+        {
+            // Load the user
+            Logger.LogInformation("Loading user data for user ID: {UserId}", uid);
+            _user = await Db.Users
+                .AsNoTracking()
+                .Include(u => u.MessagesReceived)
+                .ThenInclude(m => m.FromUser)
+                .SingleOrDefaultAsync(u => u.Id == uid);
+
+            if (_user is null)
+            {
+                Logger.LogWarning("User not found for user ID: {UserId}. Redirecting to home page.", uid);
+                Nav.NavigateTo("/");
+                return;
+            }
+
+            // Load messages
+            Logger.LogInformation("Loading messages for user ID: {UserId}", uid);
+            _messages = _user.MessagesReceived
+                .OrderByDescending(m => m.CreatedUtc)
+                .ToList();
+
+            Logger.LogInformation("Successfully loaded user data and messages for user ID: {UserId}", uid);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An error occurred while initializing the Me page for user ID: {UserId}", uid);
+            Nav.NavigateTo("/");
+        }
+    }
+}

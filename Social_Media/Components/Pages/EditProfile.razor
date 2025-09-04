@@ -1,0 +1,123 @@
+﻿@page "/edit-profile"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+@inject UserManager<ApplicationUser> UserManager
+
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Social_Media.Models
+
+@if (vm != null)
+{
+    <EditForm Model="vm"
+              OnValidSubmit="SaveProfile"
+              FormName="EditProfileForm"
+              data-enhance="false"
+              @onsubmit:preventDefault
+              @key="vm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-grid">
+            <label for="photoUrl">Photo URL</label>
+            <InputText id="photoUrl" class="form-control" @bind-Value="vm.PhotoUrl" />
+
+            <label for="about">About</label>
+            <InputTextArea id="about" class="form-control" @bind-Value="vm.About" rows="4" />
+
+            <label for="age">Age</label>
+            <InputNumber id="age" class="form-control" @bind-Value="vm.Age" />
+
+            <label for="likes">Likes</label>
+            <InputText id="likes" class="form-control" @bind-Value="vm.Likes" />
+
+            <label for="fav">Favorite Food</label>
+            <InputText id="fav" class="form-control" @bind-Value="vm.FavoriteFood" />
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success">Save</button>
+            <a class="btn btn-secondary" href="/me">Cancel</a>
+        </div>
+    </EditForm>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    private EditProfileVm? vm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await Auth.GetAuthenticationStateAsync();
+        var uid = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(uid)) { Nav.NavigateTo("/"); return; }
+
+        var user = await UserManager.FindByIdAsync(uid);
+        if (user is null) { Nav.NavigateTo("/"); return; }
+
+        vm = new EditProfileVm
+        {
+            PhotoUrl = user.PhotoUrl,
+            About = user.About,
+            Age = user.Age,
+            Likes = user.Likes,
+            FavoriteFood = user.FavoriteFood
+        };
+        Console.WriteLine("Updated editform from database");
+    }
+
+    private async Task SaveProfile()
+    {
+        Console.WriteLine("SaveProfile started.");
+        if (vm == null)
+        {
+            Console.WriteLine("vm is null. Cannot save profile!");
+            return;
+        } 
+
+        var authState = await Auth.GetAuthenticationStateAsync();
+        var uid = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(uid)) return;
+
+        var user = await UserManager.FindByIdAsync(uid);
+        if (user is null)
+        {
+            Console.WriteLine("No user found.");
+            return;
+        }
+
+        user.PhotoUrl = vm.PhotoUrl?.Trim();
+        user.About = vm.About?.Trim();
+        user.Age = vm.Age;
+        user.Likes = vm.Likes;
+        user.FavoriteFood = vm.FavoriteFood;
+
+        var result = await UserManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            Console.WriteLine("Update failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+        else
+        {
+            Console.WriteLine("Profile updated successfully!");
+        }
+
+        Nav.NavigateTo("/me", forceLoad: true);
+    }
+
+    public class EditProfileVm
+    {
+        [Url] public string? PhotoUrl { get; set; }
+        [StringLength(500)] public string? About { get; set; }
+        [Range(0, 130)] public int? Age { get; set; }
+        [StringLength(120)] public string? Likes { get; set; }
+        [StringLength(60)] public string? FavoriteFood { get; set; }
+    }
+}

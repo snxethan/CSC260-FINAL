@@ -1,0 +1,19 @@
+﻿@inherits Microsoft.AspNetCore.Mvc.Razor.RazorPage<dynamic>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - Social_Media</title>
+	<link rel="stylesheet" href="~/app.css?v=3" />
+</head>
+<body>
+<div class="page">
+	<component type="typeof(Social_Media.Components.Layout.NavBar)" render-mode="ServerPrerendered" />
+
+	<main class="container py-3">
+		@RenderBody()
+	</main>
+</div>
+</body>
+</html>

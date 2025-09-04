@@ -1,0 +1,80 @@
+﻿@page "/admin/roles"
+@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Social_Media.Models
+@inject RoleManager<IdentityRole> RoleMgr
+@inject UserManager<ApplicationUser> UserMgr
+
+<h2>Roles</h2>
+
+<div class="card mb-4">
+    <h4>Create Role</h4>
+    <EditForm Model="@newRole" OnValidSubmit="CreateRoleAsync">
+        <InputText class="form-control" @bind-Value="newRole" placeholder="Role name" />
+        <button class="btn mt-2">Create</button>
+    </EditForm>
+</div>
+
+<div class="grid">
+    @foreach (var u in allUsers)
+    {
+        <div class="card">
+            <strong>@(u.DisplayName ?? u.UserName)</strong>
+            <div class="text-muted">@u.Email</div>
+            <div class="mt-2">
+                @foreach (var r in allRoleNames)
+                {
+                    bool inRole = userRoles.TryGetValue(u.Id, out var set) && set.Contains(r);
+                    <button class="btn me-2" @onclick="@(() => ToggleRoleAsync(u, r))">
+                        @(inRole ? $"Remove {r}" : $"Add {r}")
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string newRole = "";
+    private List<ApplicationUser> allUsers = new();
+    private List<string> allRoleNames = new();
+    private Dictionary<string, HashSet<string>> userRoles = new();
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        allUsers = UserMgr.Users.Take(50).ToList();
+        allRoleNames = RoleMgr.Roles.Select(r => r.Name!).OrderBy(n => n).ToList();
+        userRoles = new();
+        foreach (var u in allUsers)
+            userRoles[u.Id] = new HashSet<string>((await UserMgr.GetRolesAsync(u)));
+        StateHasChanged();
+    }
+
+    private async Task CreateRoleAsync()
+    {
+        var name = (newRole ?? "").Trim();
+        if (!string.IsNullOrEmpty(name) && !await RoleMgr.RoleExistsAsync(name))
+            await RoleMgr.CreateAsync(new IdentityRole(name));
+        newRole = "";
+        await ReloadAsync();
+    }
+
+    private async Task ToggleRoleAsync(ApplicationUser u, string role)
+    {
+        if (!await RoleMgr.RoleExistsAsync(role)) return;
+        if (userRoles[u.Id].Contains(role))
+        {
+            await UserMgr.RemoveFromRoleAsync(u, role);
+            userRoles[u.Id].Remove(role);
+        }
+        else
+        {
+            await UserMgr.AddToRoleAsync(u, role);
+            userRoles[u.Id].Add(role);
+        }
+        StateHasChanged();
+    }
+}

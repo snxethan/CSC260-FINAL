@@ -1,0 +1,52 @@
+﻿@rendermode InteractiveServer
+@using System.Security.Claims
+@using Social_Media.Data
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider Auth
+@inject ILogger<MessageForm> Logger
+
+<div class="card">
+	<InputTextArea class="form-control" @bind-Value="body" placeholder="Write a message…" />
+	<button class="btn mt-2" type="button" @onclick="PostAsync">Post</button>
+</div>
+
+@code {
+	[Parameter] public string ToUserId { get; set; } = default!;
+	[Parameter] public EventCallback OnSaved { get; set; }
+
+	private string? body;
+
+	private async Task PostAsync()
+	{
+		Logger.LogInformation("PostAsync started.");
+
+		var principal = (await Auth.GetAuthenticationStateAsync()).User;
+		var fromId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrWhiteSpace(fromId) || string.IsNullOrWhiteSpace(body))
+		{
+			Logger.LogWarning("PostAsync aborted: fromId or body is null/empty.");
+			return;
+		}
+
+		Logger.LogInformation("Adding a new message to the database.");
+		Db.Messages.Add(new Message {
+			FromUserId = fromId,
+			ToUserId   = ToUserId,
+			Body       = body!,
+			CreatedUtc = DateTime.UtcNow
+		});
+		await Db.SaveChangesAsync();
+		Logger.LogInformation("Message saved to the database successfully.");
+
+		body = "";
+		Logger.LogInformation("Message body cleared.");
+
+		if (OnSaved.HasDelegate)
+		{
+			Logger.LogInformation("Invoking OnSaved callback.");
+			await OnSaved.InvokeAsync();
+		}
+
+		Logger.LogInformation("PostAsync completed.");
+	}
+}

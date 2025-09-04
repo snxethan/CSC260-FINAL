@@ -1,0 +1,22 @@
+﻿@page "/"
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+
+<CascadingAuthenticationState>
+	<AuthorizeView>
+		<Authorized>
+			@code { protected override void OnInitialized() => Nav.NavigateTo("/me", true); }
+		</Authorized>
+		<NotAuthorized>
+			<div class="card">
+				<h1 class="mb-2">Welcome to MySocial</h1>
+				<p class="text-muted">Share your profile, photos, and leave messages for friends.</p>
+				<div class="mt-3">
+					<a class="btn me-2" href="Identity/Account/Register">Create account</a>
+					<a class="btn" href="Identity/Account/Login">Sign in</a>
+				</div>
+			</div>
+		</NotAuthorized>
+	</AuthorizeView>
+</CascadingAuthenticationState>

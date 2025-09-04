@@ -1,0 +1,25 @@
+﻿@using Social_Media.Components.Layout
+
+<HeadContent>
+	<link rel="stylesheet" href="app.css?v=8" />
+</HeadContent>
+
+<body>
+	<script src="_framework/blazor.web.js"></script>
+</body>
+
+<CascadingAuthenticationState>
+	<Router AppAssembly="@typeof(Program).Assembly">
+		<Found Context="routeData">
+			<RouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)" />
+			<FocusOnNavigate RouteData="@routeData" Selector="h1" />
+		</Found>
+		<NotFound>
+			<LayoutView Layout="typeof(MainLayout)">
+				<p>Sorry, there’s nothing at this address.</p>
+			</LayoutView>
+		</NotFound>
+	</Router>
+</CascadingAuthenticationState>
+
+<HeadOutlet />

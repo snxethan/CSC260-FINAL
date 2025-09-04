@@ -1,0 +1,52 @@
+﻿@page "/user-search"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Social_Media.Data
+@using Social_Media.Models
+
+@inject ApplicationDbContext Db
+
+<h2>User Search</h2>
+<input class="form-control mb-3" @bind="q" @bind:event="oninput" placeholder="Search by username…" />
+<div class="grid grid-3">
+	@foreach (var u in results)
+	{
+		<div class="card">
+			<strong>@(u.DisplayName ?? u.UserName)</strong>
+			<a class="btn mt-2" href="@($"/u/{u.UserName}")">View</a>
+			<img class="img-cover" src="@(u.PhotoUrl ?? "")" alt="Profile" />
+		</div>
+	}
+</div>
+
+@code {
+	private string q = "";
+	private List<ApplicationUser> results = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		results = await Db.Users
+			.AsNoTracking()
+			.Take(24)
+			.ToListAsync();
+	}
+
+	private async Task OnSearchAsync()
+	{
+		var t = (q ?? "").Trim().ToLower();
+
+		results = await Db.Users
+			.AsNoTracking()
+			.Where(u => u.UserName != null && u.UserName.ToLower().Contains(t))
+			.OrderBy(u => u.UserName)
+			.Take(50)
+			.ToListAsync();
+
+		StateHasChanged();
+	}
+
+	private async Task OnInput(ChangeEventArgs _) => await OnSearchAsync();
+}

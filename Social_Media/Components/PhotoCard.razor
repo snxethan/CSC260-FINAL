@@ -1,0 +1,33 @@
+﻿@using Social_Media.Models
+
+@code {
+    [Parameter] public Photo Photo { get; set; } = default!;
+    [Parameter] public bool CanDelete { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public bool LinkToPhotoPage { get; set; } = true;
+}
+
+<figure class="photo-card">
+    @if (LinkToPhotoPage && Photo.Id > 0)
+    {
+        <a href="@($"/photos/{Photo.Id}")" data-enhance-nav="false">
+            <img src="@Photo.Url" alt="@Photo.Caption" loading="lazy" />
+        </a>
+    }
+    else
+    {
+        <img src="@Photo.Url" alt="@Photo.Caption" loading="lazy" />
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Photo.Caption))
+    {
+        <figcaption>@Photo.Caption</figcaption>
+    }
+    @if (CanDelete)
+    {
+        <button class="btn btn-sm btn-outline-danger"
+                @onclick="() => OnDelete.InvokeAsync(Photo.Id)">
+            Delete
+        </button>
+    }
+</figure>

@@ -1,0 +1,78 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Social_Media.Models
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<aside class="sidebar">
+    <a class="brand" href="/" data-enhance-nav="false">Social_Media</a>
+
+    <nav class="menu">
+        <a class="link @Active("/")" href="/" data-enhance-nav="false">Home</a>
+        <a class="link @Active("/about")" href="/about" data-enhance-nav="false">About</a>
+        <a class="link @Active("/user-search")" href="/user-search" data-enhance-nav="false">User Search</a>
+        <a class="link @Active("/me")" href="/me" data-enhance-nav="false">My Page</a>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="account">
+        @if (IsAuthenticated)
+        {
+            <div class="hello">Hello @DisplayName!</div>
+            <button type="button" class="btn logout" @onclick="LogoutAsync">
+                Logout
+            </button>
+        }
+        else
+        {
+            <a class="btn sidebar-btn" href="/Identity/Account/Register" data-enhance-nav="false">
+                Register
+            </a>
+            <a class="btn sidebar-btn muted" href="/Identity/Account/Login" data-enhance-nav="false">
+                Login
+            </a>
+        }
+    </div>
+</aside>
+
+@code {
+    private bool IsAuthenticated;
+    private string? DisplayName;
+    private string CurrentPath => new Uri(Nav.Uri).AbsolutePath;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAuthStateAsync();
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        await RefreshAuthStateAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+        => Nav.LocationChanged -= OnLocationChanged;
+
+    private string Active(string path)
+        => string.Equals(CurrentPath, path, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+
+    private Task LogoutAsync()
+    {
+        Console.WriteLine("Logging out...");
+        Nav.NavigateTo("/Identity/Account/Logout", forceLoad: true);
+        return Task.CompletedTask;
+    }
+
+    private async Task RefreshAuthStateAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        IsAuthenticated = user.Identity?.IsAuthenticated ?? false;
+        DisplayName = IsAuthenticated ? user.Identity?.Name : null;
+    }
+}

@@ -1,0 +1,102 @@
+﻿@page "/u/{username}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Social_Media.Data
+@using Social_Media.Models
+
+@inject ApplicationDbContext Db
+@inject ILogger<UserProfile> Logger
+
+<h1>@(user?.DisplayName ?? username)</h1>
+
+@if (user is null)
+{
+    <p>User not found.</p>
+}
+else
+{
+    <div class="grid" style="grid-template-columns: 280px 1fr;">
+        <div>
+            <img class="img-cover" src="@(user.PhotoUrl ?? "")" alt="Profile" />
+            <a class="btn btn-outline" href="/u/@user.UserName/photo" data-enhance-nav="false">
+                Photo
+            </a>
+        </div>
+        <div>
+            <p>@user.About</p>
+            <ul class="text-muted">
+                @if (user.Age is not null)
+                {
+                    <li>Age: @user.Age</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(user.Likes))
+                {
+                    <li>Likes: @user.Likes</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(user.FavoriteFood))
+                {
+                    <li>Favorite Food: @user.FavoriteFood</li>
+                }
+            </ul>
+
+            <h3 class="mt-4">Leave a message</h3>
+            <MessageForm ToUserId="@user.Id" OnSaved="LoadMessagesAsync" />
+
+            <MessageList Messages="@messages" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string username { get; set; } = default!;
+    private ApplicationUser? user;
+    private List<Message> messages = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Logger.LogInformation("OnParametersSetAsync started for username: {Username}", username);
+
+        var norm = (username ?? string.Empty).Trim().ToUpper();
+        user = await Db.Users
+                       .AsNoTracking() // read-only
+                       .FirstOrDefaultAsync(u => u.NormalizedUserName == norm);
+
+        if (user is null)
+        {
+            Logger.LogWarning("User not found for username: {Username}", username);
+        }
+        else
+        {
+            Logger.LogInformation("User loaded successfully for username: {Username}", username);
+        }
+
+        await LoadMessagesAsync();
+    }
+
+    private async Task LoadMessagesAsync()
+    {
+        if (user is null)
+        {
+            Logger.LogWarning("LoadMessagesAsync skipped because user is null.");
+            messages = new();
+            StateHasChanged();
+            return;
+        }
+
+        Logger.LogInformation("Loading messages for user ID: {UserId}", user.Id);
+
+        messages = await Db.Messages
+                           .AsNoTracking()
+                           .Include(m => m.FromUser)
+                           .Where(m => m.ToUserId == user.Id)
+                           .OrderByDescending(m => m.CreatedUtc)
+                           .ToListAsync();
+
+        Logger.LogInformation("{MessageCount} messages loaded for user ID: {UserId}", messages.Count, user.Id);
+
+        StateHasChanged();
+    }
+}

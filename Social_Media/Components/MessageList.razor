@@ -1,0 +1,22 @@
+﻿@using Social_Media.Models
+@rendermode InteractiveServer
+
+@if (Messages?.Count == 0)
+{
+	<p class="text-muted">No messages yet.</p>
+}
+else
+{
+	<div class="grid">
+		@foreach (var m in Messages!)
+		{
+			<div class="card">
+				<div><a href="@($"/u/{m.FromUser.UserName}")">@((m.FromUser.DisplayName ?? m.FromUser.UserName))</a></div>
+				<div class="text-muted">@m.CreatedUtc.ToLocalTime()</div>
+				<p class="mt-2">@m.Body</p>
+			</div>
+		}
+	</div>
+}
+
+@code { [Parameter] public List<Message>? Messages { get; set; } }

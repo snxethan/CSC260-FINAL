@@ -1,0 +1,5 @@
+﻿@page "/admin"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles="Admin")]
+<h2>Admin</h2>
+<p><a class="btn" href="/admin/roles">Manage Roles</a></p>

@@ -1,0 +1,77 @@
+﻿@page "/u/{userName}/photo"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@layout Social_Media.Components.Layout.MainLayout
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Social_Media.Data
+@using Social_Media.Models
+@inject ApplicationDbContext Db
+
+<h2>@(_displayName ?? userName) — Photo</h2>
+
+@if (_loading)
+{
+    <p>Loading…</p>
+}
+else if (_photoUrl is null)
+{
+    <p>No photo set yet.</p>
+    <div class="mt-3">
+        <NavLink href="@ProfileHref" class="btn btn-secondary">Back to profile</NavLink>
+    </div>
+}
+else
+{
+    <figure class="photo-view">
+        <img src="@_photoUrl" alt="@_displayName" />
+        @if (!string.IsNullOrWhiteSpace(_caption))
+        {
+            <figcaption>@_caption</figcaption>
+        }
+    </figure>
+
+    <div class="mt-3">
+        <NavLink href="@ProfileHref" class="btn btn-secondary">Back to profile</NavLink>
+    </div>
+}
+
+@code {
+    [Parameter] public string? userName { get; set; }
+
+    private bool _loading = true;
+    private string? _displayName;
+    private string? _photoUrl;
+    private string? _profileSlug;
+    private string? _caption;
+
+    private string ProfileHref =>
+        string.IsNullOrWhiteSpace(_profileSlug)
+            ? "/user-search"
+            : $"/u/{Uri.EscapeDataString(_profileSlug)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+
+        var user = await Db.Users.AsNoTracking()
+            .SingleOrDefaultAsync(u => u.NormalizedUserName == userName!.ToUpper());
+
+        if (user is not null)
+        {
+            _displayName = user.DisplayName ?? user.UserName;
+            _profileSlug = user.UserName;
+
+            var latest = await Db.Photos.AsNoTracking()
+                .Where(p => p.UserId == user.Id)
+                .OrderByDescending(p => p.CreatedUtc)
+                .FirstOrDefaultAsync();
+
+            _photoUrl = latest?.Url ?? user.PhotoUrl;
+            _caption = latest?.Caption ?? _displayName;
+        }
+
+        _loading = false;
+    }
+}
