@@ -6,4 +6,4 @@
 *.cshtml linguist-language=C#
 
 # Ignore static/vendor files from language stats
-wwwroot/* linguist-vendored
+**/wwwroot/* linguist-vendored
