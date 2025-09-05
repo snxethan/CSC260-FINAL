@@ -164,4 +164,6 @@ This social media platform was developed as part of CSC260 coursework to demonst
 - Component-based UI development
 - Real-time web applications
 
-Created by **Ethan Townsend** as part of **Cohort 39**.
+## Author(s)
+
+- [**Ethan Townsend (snxethan)**](www.ethantownsend.dev)
