@@ -4,7 +4,7 @@
 
 A comprehensive C#/Blazor dynamic web application that simulates a full-featured social media site, including user authentication, profile management, photo sharing, messaging, and administrative tools.
 
-## 🚀 Features
+## Features
 
 ### User Management
 - **Secure Authentication**: Registration and login with ASP.NET Core Identity
@@ -26,7 +26,7 @@ A comprehensive C#/Blazor dynamic web application that simulates a full-featured
 - **Admin Dashboard**: Manage users and roles (admin privileges required)
 - **User Management**: Administrative oversight of user accounts
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Framework**: .NET 8.0
 - **Web Framework**: ASP.NET Core with Blazor Server
@@ -36,7 +36,7 @@ A comprehensive C#/Blazor dynamic web application that simulates a full-featured
 - **Styling**: Custom CSS with modern responsive design
 - **Development Tools**: Visual Studio 2022
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before running this application, make sure you have:
 
@@ -44,7 +44,7 @@ Before running this application, make sure you have:
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (LocalDB is sufficient for development)
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended) or any compatible IDE
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installation
 
@@ -83,7 +83,7 @@ Before running this application, make sure you have:
 3. **Upload a profile photo** to personalize your account
 4. **Explore** other users and start interacting!
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Social_Media/
@@ -113,7 +113,7 @@ Social_Media/
 └── appsettings.json    # Configuration settings
 ```
 
-## 🎯 Key Features Overview
+## Key Features Overview
 
 ### Authentication & Security
 - Secure user registration and login
@@ -138,7 +138,7 @@ Social_Media/
 - Administrative dashboards
 - User account oversight
 
-## 🤝 Contributing
+## Contributing
 
 This is a student project for CSC260 (Cohort 39). If you'd like to contribute:
 
@@ -148,14 +148,14 @@ This is a student project for CSC260 (Cohort 39). If you'd like to contribute:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 Development Notes
+## Development Notes
 
 - This application uses Blazor Server for real-time interactivity
 - Database migrations are automatically applied on startup in development
 - Default admin user and roles are seeded on first run
 - The application is configured for HTTPS by default
 
-## 🎓 About This Project
+## About This Project
 
 This social media platform was developed as part of CSC260 coursework to demonstrate proficiency with:
 - Modern web development with .NET 8 and Blazor
