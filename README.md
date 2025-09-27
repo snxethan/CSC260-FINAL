@@ -166,4 +166,4 @@ This social media platform was developed as part of CSC260 coursework to demonst
 
 ## Author(s)
 
-- [**Ethan Townsend (snxethan)**](www.ethantownsend.dev)
+- [**Ethan Townsend (snxethan)**](https://www.ethantownsend.dev)
